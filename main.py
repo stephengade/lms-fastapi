@@ -1,11 +1,25 @@
-from typing import Optional, List
-from fastapi import FastAPI, Path, Query
-from pydantic import BaseModel
+from typing import Annotated
+from fastapi import Depends, FastAPI
+from sqlmodel import SQLModel, Session
+from endpoints import users, courses
+
+from database.db_setup import engine
+
+
+def create_db_and_tables():
+    SQLModel.metadata.create_all(engine)
+
+
+def get_session():
+    with Session(engine) as session:
+        yield session
+
+SessionDep = Annotated[Session, Depends(get_session)]
 
 
 app = FastAPI(
     title="User Management System",
-    description="A simple user management system using FastAPI. This API allows you to create, retrieve, and manage users.",
+    description="A simple user management system. This API allows you to create, retrieve, and manage users.",
     version="0.0.1",
     terms_of_service="http://stephengade.com/work/",
     contact={
@@ -20,45 +34,9 @@ app = FastAPI(
     redoc_url=None
 )
 
-users = []
+@app.on_event("startup")
+def on_startup():
+    create_db_and_tables()
 
-# Define user data model
-
-class User(BaseModel):
-    name: str
-    is_active: bool
-    username: Optional[str] = None
-
-
-# define user response model
-class UserResponse(BaseModel):
-    data: List[User]
-    total_count: int
-    status: str
-
-
-# Add a user
-
-@app.post("/users")
-async def create_user(user: User):
-    users.append(user)
-    return {"message": "User added successfully", "status": "ok"}
-
-
-# Get all users
-@app.get("/users", response_model=UserResponse)
-async def get_all_users():
-    return {"data": users, "total_count": len(users), "status": "ok"}
-
-# get a user
-
-@app.get("/users/{user_id}")
-async def get_user_by_id(user_id: int = Path(..., description="Enter a valid user id", gt=0),
-                         query: Optional[str] = Query(None, description="Enter a valid query string", min_length=3)
-                         ):
-    if user_id < len(users) or user_id >= len(users):
-        return {"data": users[user_id], "message": "success", "status": "ok"}
-    else:
-        return {"message": "Invalid user id", "status": "error"}
-
-    
+app.include_router(users.router)
+app.include_router(courses.router)
