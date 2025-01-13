@@ -6,7 +6,6 @@ from sqlalchemy import DateTime, func
 from sqlmodel import Field, SQLModel, Relationship, Column
 from sqlalchemy_utils import EmailType, PasswordType
 from .courses import Course
-from utils.timestamp import Timestamp
 
 # Enums
 class UserTypeEnum(str, Enum):

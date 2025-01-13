@@ -1,26 +1,23 @@
 import fastapi
-from database.models.users import UserAuth, UserResponseType
+from models.users import UserAuth, UserResponseType
 
-
-router = fastapi.APIRouter()
-
-# import the user types here
+user_router = fastapi.APIRouter()
 
 users = []
 
 # Add a user
-@router.post("/users")
+@user_router.post("")
 async def create_user(user: UserAuth):
     users.append(user)
     return {"message": "User added successfully", "status": "ok"}
 
 # Get all users
-@router.get("/users", response_model=UserResponseType)
+@user_router.get("", response_model=UserResponseType)
 async def get_all_users():
     return {"data": users, "total_count": len(users), "status": "ok"}
 
-# Get a user
-@router.get("/users/{user_id}")
+# Get a user by id
+@user_router.get("/{user_id}")
 async def get_user_by_id(user_id: int):
     if 0 <= user_id < len(users):
         return {"data": users[user_id], "message": "success", "status": "ok"}

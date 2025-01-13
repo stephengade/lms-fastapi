@@ -1,9 +1,11 @@
 from typing import Annotated
 from fastapi import Depends, FastAPI
 from sqlmodel import SQLModel, Session
-from endpoints import users, courses
+from routes import users, courses
 
-from database.db_setup import engine
+
+from db.db_setup import engine
+from utils import api_versions
 
 
 def create_db_and_tables():
@@ -31,12 +33,14 @@ app = FastAPI(
         "name": "Apache 2.0",
         "url": "http://www.apache.org/licenses/LICENSE-2.0.html",
     },
-    redoc_url=None
+    redoc_url=None,
+    docs_url="/documentation"
 )
 
 @app.on_event("startup")
 def on_startup():
     create_db_and_tables()
 
-app.include_router(users.router)
-app.include_router(courses.router)
+# Include the routers
+app.include_router(users.user_router,  prefix=f"/users", tags=["Users"])
+app.include_router(courses.course_router, prefix=f"/courses", tags=["Courses"])
